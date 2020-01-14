@@ -119,8 +119,8 @@ class Attention(layers.Layer):
         attention_output=self.output_dense_layer(attention_output)
         return attention_output
 
-    class SelfAttention(Attention):
-        """Mutiheaded self-attention layer."""
+class SelfAttention(Attention):
+    """Mutiheaded self-attention layer."""
 
-        def call(self,query_input,bias,training,cache=None,decode_loop_step=None):
-            return super().call(query_input,query_input,bias,training,cache,decode_loop_step)
+    def call(self,query_input,bias,training,cache=None,decode_loop_step=None):
+        return super().call(query_input,query_input,bias,training,cache,decode_loop_step)
