@@ -1,6 +1,6 @@
 from absl import app,flags,logging
 import tensorflow as tf
-import compute_bleu,transformer,optimizer
+import compute_bleu,transformer,optimizer,translate
 from utils import metrics,keras_utils,tokenizer
 from utils.flags import core as flags_core
 import os
@@ -209,8 +209,7 @@ class TransformerTask(object):
 
       for _ in tf.range(steps):
         train_loss_metric.reset_states()
-        self.distribution_strategy.experimental_run_v2(
-            _step_fn, args=(next(iterator),))
+        _step_fn(next(iterator))
 
     cased_score, uncased_score = None, None
     cased_score_history, uncased_score_history = [], []
