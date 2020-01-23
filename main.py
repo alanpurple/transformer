@@ -1,7 +1,7 @@
 from absl import app,flags,logging
 import tensorflow as tf
-import compute_bleu,transformer,optimizer,translate
-from utils import metrics,keras_utils,tokenizer
+import compute_bleu,transformer,optimizer,translate,data_pipeline
+from utils import metrics,keras_utils,tokenizer,misc
 from utils.flags import core as flags_core
 import os
 
@@ -170,9 +170,8 @@ class TransformerTask(object):
     model.summary()
 
     train_ds = data_pipeline.train_input_fn(params)
-    map_data_fn = data_pipeline.map_data_for_transformer_fn
     train_ds = train_ds.map(
-        map_data_fn, num_parallel_calls=params["num_parallel_calls"])
+        lambda x,y:((x, y),), num_parallel_calls=params["num_parallel_calls"])
     if params["use_ctl"]:
       train_ds_iterator = iter(train_ds)
 
@@ -356,3 +355,8 @@ class TransformerTask(object):
       opt = tf.train.experimental.enable_mixed_precision_graph_rewrite(opt)
 
     return opt
+
+def _ensure_dir(log_dir):
+  """Makes log dir if not existed."""
+  if not tf.io.gfile.exists(log_dir):
+    tf.io.gfile.makedirs(log_dir)

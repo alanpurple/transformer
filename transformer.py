@@ -13,6 +13,31 @@ EOS = "<EOS>"
 EOS_ID = 1
 RESERVED_TOKENS = [PAD, EOS]
 
+def create_model(params,is_train):
+    with tf.name_scope('model'):
+        if is_train:
+            inputs=layers.Input((None,),dtype=tf.int64,name='inputs')
+            targets=layers.Input((None,),dtype=tf.int64,name='targets')
+            internal_model=Transformer(params,name='transformer')
+            logits=internal_model([inputs,targets],training=is_train)
+            vocab_size=params['vocab_size']
+            label_smoothing=params['label_smoothing']
+            if params['enable_metrics_in_training']:
+                logits=metrics.MetricLayer(vocab_size)([logits,targets])
+            logits=layers.Lambda(lambda x: x,name='logits',dtype=tf.float32)(logits)
+            model=Model([inputs,targets],logits)
+            # TODO: Can we do this loss in float16 instead of float32?
+            loss=metrics.transformer_loss(logits,targets,label_smoothing,vocab_size)
+            model.add_loss(loss)
+            return model
+
+        else:
+            inputs=layers.Input((None,),dtype=tf.int64,name='inputs')
+            internal_model=Transformer(params,name='transformer')
+            ret=internal_model([inputs],training=is_train)
+            outputs,scores=ret['outputs'],ret['scores']
+            return Model(inputs,[outputs,scores])
+
 class Transformer(Model):
     """Transformer model with Keras.
 
