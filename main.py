@@ -1,5 +1,6 @@
 from absl import app,flags,logging
 import tensorflow as tf
+from tensorflow_core.python.keras.mixed_precision import experimental as mixed_precision
 import compute_bleu,transformer,optimizer,translate,data_pipeline
 from utils import metrics,keras_utils,tokenizer,misc
 from utils.flags import core as flags_core
@@ -125,14 +126,13 @@ class TransformerTask(object):
       # this.
       loss_scale = flags_core.get_loss_scale(
           flags_obj, default_for_fp16="dynamic")
-      policy = tf.compat.v2.keras.mixed_precision.experimental.Policy(
-          "mixed_float16", loss_scale=loss_scale)
-      tf.compat.v2.keras.mixed_precision.experimental.set_policy(policy)
+      policy = mixed_precision.policy.Policy("mixed_float16", loss_scale=loss_scale)
+      mixed_precision.policy.set_policy(policy)
 
     elif params["dtype"] == tf.bfloat16:
-      policy = tf.compat.v2.keras.mixed_precision.experimental.Policy(
+      policy = mixed_precision.policy.Policy(
           "mixed_bfloat16")
-      tf.compat.v2.keras.mixed_precision.experimental.set_policy(policy)
+      mixed_precision.policy.set_policy(policy)
 
   def train(self):
     """Trains the model."""
@@ -235,7 +235,7 @@ class TransformerTask(object):
 
           if params["enable_tensorboard"]:
             for metric_obj in train_metrics:
-              tf.compat.v2.summary.scalar(metric_obj.name, metric_obj.result(),
+              tf.summary.scalar(metric_obj.name, metric_obj.result(),
                                           current_step)
 
         checkpoint_name = checkpoint.save(
