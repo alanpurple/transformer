@@ -1,6 +1,6 @@
 from absl import app,flags,logging
 import tensorflow as tf
-from tensorflow_core.python.keras.mixed_precision import experimental as mixed_precision
+from tensorflow.keras.mixed_precision import experimental as mixed_precision
 import compute_bleu,transformer,optimizer,translate,data_pipeline
 from utils import metrics,keras_utils,tokenizer,misc
 from utils.flags import core as flags_core
@@ -126,13 +126,13 @@ class TransformerTask(object):
       # this.
       loss_scale = flags_core.get_loss_scale(
           flags_obj, default_for_fp16="dynamic")
-      policy = mixed_precision.policy.Policy("mixed_float16", loss_scale=loss_scale)
-      mixed_precision.policy.set_policy(policy)
+      policy = mixed_precision.Policy("mixed_float16", loss_scale=loss_scale)
+      mixed_precision.set_policy(policy)
 
     elif params["dtype"] == tf.bfloat16:
-      policy = mixed_precision.policy.Policy(
+      policy = mixed_precision.Policy(
           "mixed_bfloat16")
-      mixed_precision.policy.set_policy(policy)
+      mixed_precision.set_policy(policy)
 
   def train(self):
     """Trains the model."""
@@ -342,7 +342,7 @@ class TransformerTask(object):
         epsilon=params["optimizer_adam_epsilon"])
 
     if params["dtype"] == tf.float16:
-      opt = mixed_precision.loss_scale_optimizer.LossScaleOptimizer(
+      opt = mixed_precision.LossScaleOptimizer(
           opt,
           loss_scale=flags_core.get_loss_scale(
               self.flags_obj, default_for_fp16="dynamic"))
